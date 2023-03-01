@@ -16,7 +16,7 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                         if (squares[subBoardKey][0][i] || calculateWinner(squares[subBoardKey][0])[0]) {
                                 return;
                         }
-                        const nextSquares = squares.slice();
+                        const nextSquares = JSON.parse(JSON.stringify(squares.slice()));
                         if (xIsNext) {
                                 nextSquares[subBoardKey][0][i] = "X";
                         } else {
@@ -133,7 +133,9 @@ function MainBoard({ xIsNext, squares }) {
 export default function Game() {
 
         function handlePlay(nextSquares, nextSubBoard) {
-                const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+                let nextHistory = JSON.parse(JSON.stringify(history.slice(0, currentMove + 1)));
+                nextHistory.push(nextSquares);
+
                 setHistory(nextHistory);
                 setCurrentMove(nextHistory.length - 1);
                 setNextSubBoard(nextSubBoard);
@@ -179,6 +181,8 @@ export default function Game() {
 
                 );
         });
+        console.log(moves);
+        console.log(history);
         const [movesIsAscending, setMovesIsAscending] = useState(true);
 
         return (
