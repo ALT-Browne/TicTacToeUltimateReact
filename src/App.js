@@ -1,7 +1,11 @@
 import React from 'react';
 import { useState } from 'react';
 
-function Square({ value, winningSquare, onSquareClick }) {
+function Square({ value, onSquareClick }) {
+        return <button className="square" onClick={onSquareClick}>{value}</button>;
+}
+
+function MainBoardSquare({ value, winningSquare, onSquareClick }) {
         return <button className={winningSquare ? "winning-square" : "square"} onClick={onSquareClick}>{value}</button>;
 }
 
@@ -47,7 +51,7 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<Square key={i * 3 + j} value={squares[subBoardKey][i * 3 + j]} winningSquare={false} onSquareClick={() => handleClick(i * 3 + j)} />);
+                                row.push(<Square key={i * 3 + j} value={squares[subBoardKey][0][i * 3 + j]} onSquareClick={() => handleClick(i * 3 + j)} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
@@ -75,7 +79,7 @@ function Board({ xIsNext, squares, onPlay, nextSubBoard }) {
                                 row.push(<SubBoard key={i * 3 + j} subBoardKey={i * 3 + j} nextSubBoard={nextSubBoard} onPlay={onPlay} squares={squares} xIsNext={xIsNext} />);
                         }
                         board.push(
-                                <div key={i} className="board-row">
+                                <div key={i} className="sub-board-row">
                                         {row}
                                 </div>
                         )
@@ -97,7 +101,7 @@ function MainBoard({ xIsNext, squares }) {
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<Square key={i * 3 + j} value={squares[i * 3 + j][1]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} />);
+                                row.push(<MainBoardSquare key={i * 3 + j} value={squares[i * 3 + j][1]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
@@ -165,7 +169,7 @@ export default function Game() {
                         for (let i = 0; i < 9; i++) {
                                 for (let j = 0; j < 9; j++) {
                                         if (squares[i][0][j] != null && prevMove[i][0][j] === null) {
-                                                currMoveLocation = [i, Math.floor(j / 3) + 1, (j % 3) + 1];
+                                                currMoveLocation = [i + 1, Math.floor(j / 3) + 1, (j % 3) + 1];
                                         }
                                 }
                         }

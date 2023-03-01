@@ -78,6 +78,10 @@ code {
         display: table;
 }
 
+.sub-board-row {
+        display: flex;
+}
+
 .status {
         margin-bottom: 10px;
 }
