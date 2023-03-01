@@ -6,30 +6,48 @@ function Square({ value, winningSquare, onSquareClick }) {
 }
 
 function MoveButton({ onClick, description, currMoveLocation }) {
-        return currMoveLocation[0] === null && currMoveLocation[1] === null ? <button onClick={onClick}>{description}</button> : <button onClick={onClick}>{description + " (row " + currMoveLocation[0] + ", col " + currMoveLocation[1] + ")"}</button>;
+        return currMoveLocation[0] === null && currMoveLocation[1] === null && currMoveLocation[2] === null ? <button onClick={onClick}>{description}</button> : <button onClick={onClick}>{description + " (sub-board " + currMoveLocation[0] + ", row " + currMoveLocation[1] + ", col " + currMoveLocation[2] + ")"}</button>;
 }
 
-function Board({ xIsNext, squares, onPlay }) {
+function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
 
         function handleClick(i) {
-                if (squares[i] || calculateWinner(squares)[0]) {
-                        return;
+                if (nextSubBoard === -1 || nextSubBoard === subBoardKey) {
+                        if (squares[subBoardKey][0][i] || calculateWinner(squares[subBoardKey][0])[0]) {
+                                return;
+                        }
+                        const nextSquares = squares.slice();
+                        if (xIsNext) {
+                                nextSquares[subBoardKey][0][i] = "X";
+                        } else {
+                                nextSquares[subBoardKey][0][i] = "O";
+                        }
+
+                        const winner = calculateWinner(nextSquares[subBoardKey][0]);
+                        if (winner[0]) {
+                                nextSquares[subBoardKey][1] = winner[0];
+                        }
+
+                        let isNextSubBoardFull = true;
+                        for (let j = 0; j < 9; j++) {
+                                if (squares[i][0][j] === null) {
+                                        isNextSubBoardFull = false;
+                                }
+                        }
+                        if (isNextSubBoardFull) {
+                                onPlay(nextSquares, -1);
+                        } else {
+                                onPlay(nextSquares, i);
+                        }
                 }
-                const nextSquares = squares.slice();
-                if (xIsNext) {
-                        nextSquares[i] = "X"
-                } else {
-                        nextSquares[i] = "O"
-                }
-                onPlay(nextSquares);
         }
 
-        function renderBoard(winner) {
+        function renderSubBoard() {
                 const board = [];
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<Square key={i * 3 + j} value={squares[i * 3 + j]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} onSquareClick={() => handleClick(i * 3 + j)} />);
+                                row.push(<Square key={i * 3 + j} value={squares[subBoardKey][i * 3 + j]} winningSquare={false} onSquareClick={() => handleClick(i * 3 + j)} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
@@ -40,7 +58,60 @@ function Board({ xIsNext, squares, onPlay }) {
                 return board;
         }
 
-        const winner = calculateWinner(squares);
+        return (
+                <div>
+                        {renderSubBoard()}
+                </div>
+        );
+}
+
+function Board({ xIsNext, squares, onPlay, nextSubBoard }) {
+
+        function renderBoard() {
+                const board = [];
+                for (let i = 0; i < 3; i++) {
+                        let row = [];
+                        for (let j = 0; j < 3; j++) {
+                                row.push(<SubBoard key={i * 3 + j} subBoardKey={i * 3 + j} nextSubBoard={nextSubBoard} onPlay={onPlay} squares={squares} xIsNext={xIsNext} />);
+                        }
+                        board.push(
+                                <div key={i} className="board-row">
+                                        {row}
+                                </div>
+                        )
+                }
+                return board;
+        }
+
+        return (
+                <div>
+                        {renderBoard()}
+                </div>
+        );
+}
+
+function MainBoard({ xIsNext, squares }) {
+
+        function renderMainBoard(winner) {
+                const board = [];
+                for (let i = 0; i < 3; i++) {
+                        let row = [];
+                        for (let j = 0; j < 3; j++) {
+                                row.push(<Square key={i * 3 + j} value={squares[i * 3 + j][1]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} />);
+                        }
+                        board.push(
+                                <div key={i} className="board-row">
+                                        {row}
+                                </div>
+                        )
+                }
+                return board;
+        }
+
+        const mainBoardSquares = squares.map((subBoard, index) => {
+                return subBoard[1];
+        });
+        const winner = calculateWinner(mainBoardSquares);
         let status;
         if (winner[0]) {
                 status = 'Winner: ' + winner[0];
@@ -54,16 +125,18 @@ function Board({ xIsNext, squares, onPlay }) {
         return (
                 <div>
                         <div className='status'>{status}</div>
-                        {renderBoard(winner)}
+                        {renderMainBoard(winner)}
                 </div>
         );
 }
 
 export default function Game() {
-        function handlePlay(nextSquares) {
+
+        function handlePlay(nextSquares, nextSubBoard) {
                 const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
                 setHistory(nextHistory);
                 setCurrentMove(nextHistory.length - 1);
+                setNextSubBoard(nextSubBoard);
         }
 
         function jumpTo(nextMove) {
@@ -74,25 +147,29 @@ export default function Game() {
                 setMovesIsAscending(!movesIsAscending);
         }
 
-        const [history, setHistory] = useState([Array(9).fill(null)]);
+        const [history, setHistory] = useState([Array(9).fill([Array(9).fill(null), null])]);//the second element of the inner array contains the symbol that has won that subBoard. Null initially...
         const [currentMove, setCurrentMove] = useState(0);
         const xIsNext = currentMove % 2 === 0;
+        const [nextSubBoard, setNextSubBoard] = useState(-1);
         const currentSquares = history[currentMove];
+
         const moves = history.map((squares, move) => {
                 let description;
                 let prevMove;
-                let currMoveLocation = [null, null];
+                let currMoveLocation = [null, null, null];
                 if (move > 0) {
                         description = 'Go to move #' + move;
                         prevMove = history[move - 1];
-                        for (let i = 0; i < squares.length; i++) {
-                                if (squares[i] != null && prevMove[i] === null) {
-                                        currMoveLocation = [Math.floor(i / 3) + 1, (i % 3) + 1];
+                        for (let i = 0; i < 9; i++) {
+                                for (let j = 0; j < 9; j++) {
+                                        if (squares[i][0][j] != null && prevMove[i][0][j] === null) {
+                                                currMoveLocation = [i, Math.floor(j / 3) + 1, (j % 3) + 1];
+                                        }
                                 }
                         }
                 } else {
                         description = 'Go to game start';
-                        currMoveLocation = [null, null];
+                        currMoveLocation = [null, null, null];
                 }
 
                 return (
@@ -107,7 +184,7 @@ export default function Game() {
         return (
                 <div className="game">
                         <div className="game-board">
-                                <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} />
+                                <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} nextSubBoard={nextSubBoard} />
                         </div>
                         <div className="game-info">
                                 <div className="block" >
@@ -116,6 +193,9 @@ export default function Game() {
                                 <div className="block">
                                         <button onClick={() => changeMovesOrder()}>{movesIsAscending ? "Descending" : "Ascending"}</button>
                                 </div>
+                        </div>
+                        <div className="main-board">
+                                <MainBoard xIsNext={xIsNext} squares={currentSquares} />
                         </div>
                 </div>
         );
