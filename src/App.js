@@ -17,7 +17,7 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
 
         function handleClick(i) {
                 if (nextSubBoard === -1 || nextSubBoard === subBoardKey) {
-                        if (squares[subBoardKey][0][i] || calculateWinner(squares[subBoardKey][0])[0]) {
+                        if (squares[subBoardKey][0][i]) {
                                 return;
                         }
                         const nextSquares = JSON.parse(JSON.stringify(squares.slice()));
@@ -27,9 +27,8 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                                 nextSquares[subBoardKey][0][i] = "O";
                         }
 
-                        const winner = calculateWinner(nextSquares[subBoardKey][0]);
-                        if (winner[0]) {
-                                nextSquares[subBoardKey][1] = winner[0];
+                        if (!nextSquares[subBoardKey][1]) {
+                                nextSquares[subBoardKey][1] = calculateWinner(nextSquares[subBoardKey][0])[0];
                         }
 
                         let isNextSubBoardFull = true;
@@ -142,7 +141,7 @@ export default function Game() {
 
                 setHistory(nextHistory);
                 setCurrentMove(nextHistory.length - 1);
-                setNextSubBoard(nextSubBoard);
+                //setNextSubBoard(nextSubBoard);
         }
 
         function jumpTo(nextMove) {
@@ -156,8 +155,32 @@ export default function Game() {
         const [history, setHistory] = useState([Array(9).fill([Array(9).fill(null), null])]);//the second element of the inner array contains the symbol that has won that subBoard. Null initially...
         const [currentMove, setCurrentMove] = useState(0);
         const xIsNext = currentMove % 2 === 0;
-        const [nextSubBoard, setNextSubBoard] = useState(-1);
+        //const [nextSubBoard, setNextSubBoard] = useState(-1);
         const currentSquares = history[currentMove];
+
+        const previousSquares = currentMove > 0 ? history[currentMove - 1] : currentSquares;
+        let nextSubBoard = -1;
+        if (currentMove > 0) {
+                for (let i = 0; i < 9; i++) {
+                        for (let j = 0; j < 9; j++) {
+                                if (currentSquares[i][0][j] != null && previousSquares[i][0][j] === null) {
+                                        nextSubBoard = j;
+                                }
+                        }
+                }
+                let isNextSubBoardFull = true;
+                for (let j = 0; j < 9; j++) {
+                        if (currentSquares[nextSubBoard][0][j] === null) {
+                                isNextSubBoardFull = false;
+                        }
+                }
+                if (isNextSubBoardFull) {
+                        nextSubBoard = -1;
+                }
+        } else {
+                nextSubBoard = -1;
+        }
+
 
         const moves = history.map((squares, move) => {
                 let description;
@@ -187,6 +210,7 @@ export default function Game() {
         });
         console.log(moves);
         console.log(history);
+        console.log(nextSubBoard);
         const [movesIsAscending, setMovesIsAscending] = useState(true);
 
         return (
