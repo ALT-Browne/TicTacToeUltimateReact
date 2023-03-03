@@ -97,12 +97,12 @@ function Board({ xIsNext, squares, onPlay, nextSubBoard }) {
 
 function MainBoard({ xIsNext, squares }) {
 
-        function renderMainBoard(winner) {
+        function renderMainBoard(mainBoardSquares, winner) {
                 const board = [];
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<MainBoardSquare key={i * 3 + j} value={squares[i * 3 + j][1]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} />);
+                                row.push(<MainBoardSquare key={i * 3 + j} value={mainBoardSquares[i * 3 + j]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
@@ -123,14 +123,14 @@ function MainBoard({ xIsNext, squares }) {
         } else {
                 status = 'Next player: ' + (xIsNext ? 'X' : 'O');
         }
-        if (squares.every(value => value != null) && !winner[0]) {
+        if (mainBoardSquares.every(value => value != null) && !winner[0]) {
                 status = "Draw"
         }
 
         return (
                 <div>
                         <div className='status'>{status}</div>
-                        {renderMainBoard(winner)}
+                        {renderMainBoard(mainBoardSquares, winner)}
                 </div>
         );
 }
