@@ -143,7 +143,7 @@ export default function Game() {
                 setMovesIsAscending(!movesIsAscending);
         }
 
-        const [history, setHistory] = useState([Array(9).fill([Array(9).fill(null), null])]);//the second element of the inner array contains the symbol that has won that subBoard. Null initially...
+        const [history, setHistory] = useState([Array(9).fill([Array(9).fill(null), null])]);// The second element of the inner array of length 2 contains the symbol that has won that subBoard. Null initially...
         const [currentMove, setCurrentMove] = useState(0);
         const xIsNext = currentMove % 2 === 0;
         const currentSquares = history[currentMove];
@@ -153,7 +153,7 @@ export default function Game() {
         if (currentMove > 0) {
                 for (let i = 0; i < 9; i++) {
                         for (let j = 0; j < 9; j++) {
-                                // find location of the latest move and see if the nextSubBoard it determines, is full
+                                // Find location of the latest move and see if the nextSubBoard it determines is full
                                 if (currentSquares[i][0][j] != null && previousSquares[i][0][j] === null) {
                                         !currentSquares[j][0].some(value => value === null) ? nextSubBoard = -1 : nextSubBoard = j;
                                 }
