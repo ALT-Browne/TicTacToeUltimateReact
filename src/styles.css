@@ -57,6 +57,21 @@ code {
         width: 34px;
 }
 
+.clickable-square {
+        background: #08e04c;
+        border: 1px solid #999;
+        float: left;
+        font-size: 24px;
+        font-weight: bold;
+        line-height: 34px;
+        height: 34px;
+        margin-right: -1px;
+        margin-top: -1px;
+        padding: 0;
+        text-align: center;
+        width: 34px;
+}
+
 .winning-square {
         background: #08e04c;
         border: 1px solid #999;

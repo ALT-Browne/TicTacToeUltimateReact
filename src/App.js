@@ -1,8 +1,10 @@
 import React from 'react';
 import { useState } from 'react';
 
-function Square({ value, onSquareClick }) {
-        return <button className="square" onClick={onSquareClick}>{value}</button>;
+function Square({ clickable, value, onSquareClick }) {
+        return (
+                clickable ? <button className="clickable-square" onClick={onSquareClick}>{value}</button> : <button className="square" onClick={onSquareClick}>{value}</button>
+        );
 }
 
 function MainBoardSquare({ value, winningSquare, onSquareClick }) {
@@ -50,7 +52,7 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<Square key={i * 3 + j} value={squares[subBoardKey][0][i * 3 + j]} onSquareClick={() => handleClick(i * 3 + j)} />);
+                                row.push(<Square key={i * 3 + j} clickable={(nextSubBoard === -1 || nextSubBoard === subBoardKey) && !squares[subBoardKey][0][i * 3 + j] ? true : false} value={squares[subBoardKey][0][i * 3 + j]} onSquareClick={() => handleClick(i * 3 + j)} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
