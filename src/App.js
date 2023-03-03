@@ -13,7 +13,7 @@ function MoveButton({ onClick, description }) {
         return <button onClick={onClick}>{description}</button>;
 }
 
-function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
+function SubBoard({ xIsNext, squares, onPlay, subBoardKey, clickable }) {
 
         function handleClick(clickableSquare, i) {
                 if (clickableSquare) {
@@ -36,11 +36,11 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
         function renderSubBoard() {
                 const board = [];
                 for (let i = 0; i < 3; i++) {
-                        let row = [];
+                        const row = [];
                         for (let j = 0; j < 3; j++) {
-                                let squareIndex = i * 3 + j;
-                                let squareValue = squares[subBoardKey][0][squareIndex];
-                                let clickableSquare = clickableSubBoard && !squareValue ? true : false;
+                                const squareIndex = i * 3 + j;
+                                const squareValue = squares[subBoardKey][0][squareIndex];
+                                const clickableSquare = clickable && !squareValue ? true : false;
                                 row.push(<Square key={squareIndex} clickable={clickableSquare} value={squareValue} onSquareClick={() => handleClick(clickableSquare, squareIndex)} />);
                         }
                         board.push(
@@ -51,8 +51,6 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                 }
                 return board;
         }
-
-        const clickableSubBoard = nextSubBoard === -1 || nextSubBoard === subBoardKey ? true : false;
 
         return (
                 <div>
@@ -66,9 +64,10 @@ function Board({ xIsNext, squares, onPlay, nextSubBoard }) {
         function renderBoard() {
                 const board = [];
                 for (let i = 0; i < 3; i++) {
-                        let row = [];
+                        const row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<SubBoard key={i * 3 + j} subBoardKey={i * 3 + j} nextSubBoard={nextSubBoard} onPlay={onPlay} squares={squares} xIsNext={xIsNext} />);
+                                const clickableSubBoard = nextSubBoard === -1 || nextSubBoard === (i * 3 + j) ? true : false;
+                                row.push(<SubBoard key={i * 3 + j} subBoardKey={i * 3 + j} clickable={clickableSubBoard} onPlay={onPlay} squares={squares} xIsNext={xIsNext} />);
                         }
                         board.push(
                                 <div key={i} className="sub-board-row">
@@ -91,9 +90,9 @@ function MainBoard({ xIsNext, squares }) {
         function renderMainBoard(mainBoardSquares, winner) {
                 const board = [];
                 for (let i = 0; i < 3; i++) {
-                        let row = [];
+                        const row = [];
                         for (let j = 0; j < 3; j++) {
-                                let winningSquare = winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false;
+                                const winningSquare = winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false;
                                 row.push(<MainBoardSquare key={i * 3 + j} value={mainBoardSquares[i * 3 + j]} winningSquare={winningSquare} />);
                         }
                         board.push(
@@ -130,7 +129,7 @@ function MainBoard({ xIsNext, squares }) {
 export default function Game() {
 
         function handlePlay(nextSquares) {
-                let nextHistory = JSON.parse(JSON.stringify(history.slice(0, currentMove + 1)));
+                const nextHistory = JSON.parse(JSON.stringify(history.slice(0, currentMove + 1)));
                 nextHistory.push(nextSquares);
                 setHistory(nextHistory);
                 setCurrentMove(nextHistory.length - 1);
@@ -164,10 +163,9 @@ export default function Game() {
 
         const moves = history.map((squares, move) => {
                 let description;
-                let prevMove;
                 let currMoveLocation = [null, null, null];
                 if (move > 0) {
-                        prevMove = history[move - 1];
+                        const prevMove = history[move - 1];
                         for (let i = 0; i < 9; i++) {
                                 for (let j = 0; j < 9; j++) {
                                         if (squares[i][0][j] != null && prevMove[i][0][j] === null) {
