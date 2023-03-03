@@ -2,26 +2,21 @@ import React from 'react';
 import { useState } from 'react';
 
 function Square({ clickable, value, onSquareClick }) {
-        return (
-                clickable ? <button className="clickable-square" onClick={onSquareClick}>{value}</button> : <button className="square" onClick={onSquareClick}>{value}</button>
-        );
+        return <button className={clickable ? "clickable-square" : "square"} onClick={onSquareClick}>{value}</button>;
 }
 
 function MainBoardSquare({ value, winningSquare, onSquareClick }) {
         return <button className={winningSquare ? "winning-square" : "square"} onClick={onSquareClick}>{value}</button>;
 }
 
-function MoveButton({ onClick, description, currMoveLocation }) {
-        return currMoveLocation[0] === null && currMoveLocation[1] === null && currMoveLocation[2] === null ? <button onClick={onClick}>{description}</button> : <button onClick={onClick}>{description + " (sub-board " + currMoveLocation[0] + ", row " + currMoveLocation[1] + ", col " + currMoveLocation[2] + ")"}</button>;
+function MoveButton({ onClick, description }) {
+        return <button onClick={onClick}>{description}</button>;
 }
 
 function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
 
-        function handleClick(i) {
-                if (nextSubBoard === -1 || nextSubBoard === subBoardKey) {
-                        if (squares[subBoardKey][0][i]) {
-                                return;
-                        }
+        function handleClick(clickableSquare, i) {
+                if (clickableSquare) {
                         const nextSquares = JSON.parse(JSON.stringify(squares.slice()));
                         if (xIsNext) {
                                 nextSquares[subBoardKey][0][i] = "X";
@@ -29,21 +24,12 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                                 nextSquares[subBoardKey][0][i] = "O";
                         }
 
+                        //Keep the original winner of a subBoard, even if the other player later completes a winning line.
                         if (!nextSquares[subBoardKey][1]) {
                                 nextSquares[subBoardKey][1] = calculateWinner(nextSquares[subBoardKey][0])[0];
                         }
 
-                        let isNextSubBoardFull = true;
-                        for (let j = 0; j < 9; j++) {
-                                if (squares[i][0][j] === null) {
-                                        isNextSubBoardFull = false;
-                                }
-                        }
-                        if (isNextSubBoardFull) {
-                                onPlay(nextSquares, -1);
-                        } else {
-                                onPlay(nextSquares, i);
-                        }
+                        onPlay(nextSquares);
                 }
         }
 
@@ -52,7 +38,10 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<Square key={i * 3 + j} clickable={(nextSubBoard === -1 || nextSubBoard === subBoardKey) && !squares[subBoardKey][0][i * 3 + j] ? true : false} value={squares[subBoardKey][0][i * 3 + j]} onSquareClick={() => handleClick(i * 3 + j)} />);
+                                let squareIndex = i * 3 + j;
+                                let squareValue = squares[subBoardKey][0][squareIndex];
+                                let clickableSquare = clickableSubBoard && !squareValue ? true : false;
+                                row.push(<Square key={squareIndex} clickable={clickableSquare} value={squareValue} onSquareClick={() => handleClick(clickableSquare, squareIndex)} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
@@ -62,6 +51,8 @@ function SubBoard({ xIsNext, squares, onPlay, subBoardKey, nextSubBoard }) {
                 }
                 return board;
         }
+
+        const clickableSubBoard = nextSubBoard === -1 || nextSubBoard === subBoardKey ? true : false;
 
         return (
                 <div>
@@ -102,7 +93,8 @@ function MainBoard({ xIsNext, squares }) {
                 for (let i = 0; i < 3; i++) {
                         let row = [];
                         for (let j = 0; j < 3; j++) {
-                                row.push(<MainBoardSquare key={i * 3 + j} value={mainBoardSquares[i * 3 + j]} winningSquare={winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false} />);
+                                let winningSquare = winner[0] && winner[1].some(arrIndex => Math.floor(arrIndex / 3) === i && arrIndex % 3 === j) ? true : false;
+                                row.push(<MainBoardSquare key={i * 3 + j} value={mainBoardSquares[i * 3 + j]} winningSquare={winningSquare} />);
                         }
                         board.push(
                                 <div key={i} className="board-row">
@@ -137,13 +129,11 @@ function MainBoard({ xIsNext, squares }) {
 
 export default function Game() {
 
-        function handlePlay(nextSquares, nextSubBoard) {
+        function handlePlay(nextSquares) {
                 let nextHistory = JSON.parse(JSON.stringify(history.slice(0, currentMove + 1)));
                 nextHistory.push(nextSquares);
-
                 setHistory(nextHistory);
                 setCurrentMove(nextHistory.length - 1);
-                //setNextSubBoard(nextSubBoard);
         }
 
         function jumpTo(nextMove) {
@@ -157,7 +147,6 @@ export default function Game() {
         const [history, setHistory] = useState([Array(9).fill([Array(9).fill(null), null])]);//the second element of the inner array contains the symbol that has won that subBoard. Null initially...
         const [currentMove, setCurrentMove] = useState(0);
         const xIsNext = currentMove % 2 === 0;
-        //const [nextSubBoard, setNextSubBoard] = useState(-1);
         const currentSquares = history[currentMove];
 
         const previousSquares = currentMove > 0 ? history[currentMove - 1] : currentSquares;
@@ -165,31 +154,19 @@ export default function Game() {
         if (currentMove > 0) {
                 for (let i = 0; i < 9; i++) {
                         for (let j = 0; j < 9; j++) {
+                                // find location of the latest move and see if the nextSubBoard it determines, is full
                                 if (currentSquares[i][0][j] != null && previousSquares[i][0][j] === null) {
-                                        nextSubBoard = j;
+                                        !currentSquares[j][0].some(value => value === null) ? nextSubBoard = -1 : nextSubBoard = j;
                                 }
                         }
                 }
-                let isNextSubBoardFull = true;
-                for (let j = 0; j < 9; j++) {
-                        if (currentSquares[nextSubBoard][0][j] === null) {
-                                isNextSubBoardFull = false;
-                        }
-                }
-                if (isNextSubBoardFull) {
-                        nextSubBoard = -1;
-                }
-        } else {
-                nextSubBoard = -1;
         }
-
 
         const moves = history.map((squares, move) => {
                 let description;
                 let prevMove;
                 let currMoveLocation = [null, null, null];
                 if (move > 0) {
-                        description = 'Go to move #' + move;
                         prevMove = history[move - 1];
                         for (let i = 0; i < 9; i++) {
                                 for (let j = 0; j < 9; j++) {
@@ -198,6 +175,7 @@ export default function Game() {
                                         }
                                 }
                         }
+                        description = "Go to move #" + move + " (sub-board " + currMoveLocation[0] + ", row " + currMoveLocation[1] + ", col " + currMoveLocation[2] + ")"
                 } else {
                         description = 'Go to game start';
                         currMoveLocation = [null, null, null];
@@ -205,14 +183,12 @@ export default function Game() {
 
                 return (
                         <div>
-                                <MoveButton description={description} currMoveLocation={currMoveLocation} onClick={() => jumpTo(move)} />
+                                <MoveButton description={description} onClick={() => jumpTo(move)} />
                         </div>
 
                 );
         });
-        console.log(moves);
-        console.log(history);
-        console.log(nextSubBoard);
+
         const [movesIsAscending, setMovesIsAscending] = useState(true);
 
         return (
