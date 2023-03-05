@@ -78,9 +78,26 @@ function Board({ xIsNext, squares, onPlay, nextSubBoard }) {
                 return board;
         }
 
+        const mainBoardSquares = squares.map((subBoard, index) => {
+                return subBoard[1];
+        });
+        const winner = calculateWinner(mainBoardSquares);
+        let status;
+        if (winner[0]) {
+                status = 'Winner: ' + winner[0];
+        } else {
+                status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+        }
+        if (mainBoardSquares.every(value => value != null) && !winner[0]) {
+                status = "Draw"
+        }
+
         return (
-                <div>
-                        {renderBoard()}
+                <div className="desc-board">
+                        <div className='text'>{status}</div>
+                        <div>
+                                {renderBoard()}
+                        </div>
                 </div>
         );
 }
@@ -108,20 +125,22 @@ function MainBoard({ xIsNext, squares }) {
                 return subBoard[1];
         });
         const winner = calculateWinner(mainBoardSquares);
-        let status;
-        if (winner[0]) {
-                status = 'Winner: ' + winner[0];
-        } else {
-                status = 'Next player: ' + (xIsNext ? 'X' : 'O');
-        }
-        if (mainBoardSquares.every(value => value != null) && !winner[0]) {
-                status = "Draw"
-        }
+        // let status;
+        // if (winner[0]) {
+        //         status = 'Winner: ' + winner[0];
+        // } else {
+        //         status = 'Next player: ' + (xIsNext ? 'X' : 'O');
+        // }
+        // if (mainBoardSquares.every(value => value != null) && !winner[0]) {
+        //         status = "Draw"
+        // }
 
         return (
-                <div>
-                        <div className='status'>{status}</div>
-                        {renderMainBoard(mainBoardSquares, winner)}
+                <div className="desc-board">
+                        <div className='text'>Result</div>
+                        <div>
+                                {renderMainBoard(mainBoardSquares, winner)}
+                        </div>
                 </div>
         );
 }
@@ -191,18 +210,20 @@ export default function Game() {
 
         return (
                 <div className="game">
-                        <div className="game-board">
-                                <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} nextSubBoard={nextSubBoard} />
-                        </div>
-                        <div className="game-info">
-                                <div className="block" >
-                                        {movesIsAscending ? moves : moves.reverse()}
+                        <div className="playBoard-gameInfo">
+                                <div className="playBoard">
+                                        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} nextSubBoard={nextSubBoard} />
                                 </div>
-                                <div className="block">
-                                        <button onClick={() => changeMovesOrder()}>{movesIsAscending ? "Descending" : "Ascending"}</button>
+                                <div className="gameInfo">
+                                        <div className="block" >
+                                                {movesIsAscending ? moves : moves.reverse()}
+                                        </div>
+                                        <div className="block">
+                                                <button onClick={() => changeMovesOrder()}>{movesIsAscending ? "Descending" : "Ascending"}</button>
+                                        </div>
                                 </div>
                         </div>
-                        <div className="main-board">
+                        <div className="mainBoard">
                                 <MainBoard xIsNext={xIsNext} squares={currentSquares} />
                         </div>
                 </div>

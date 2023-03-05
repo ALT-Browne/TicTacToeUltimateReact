@@ -97,19 +97,37 @@ code {
         display: flex;
 }
 
-.status {
+.desc-board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+}
+
+.text {
         margin-bottom: 10px;
 }
 
 .game {
         display: flex;
         flex-direction: row;
+        justify-content: center;
+        align-items: baseline;
 }
 
-.game-info {
-        margin-left: 20px;
+.playBoard-gameInfo {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: center;
+}
+
+.gameInfo {
+        margin-top: 17px;
+        margin-left: 20px;
+}
+
+.mainBoard {
+        margin-top: 20px;
+        margin-left: 20px;
 }
 
 .block {
